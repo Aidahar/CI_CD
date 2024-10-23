@@ -1,0 +1,58 @@
+stages:
+  - build
+  - style
+  - test
+  - deploy
+
+build:
+  stage: build
+  script:
+    - cd src/cat
+    - make all
+    - cd ../grep
+    - make all
+  artifacts:
+    paths:
+    - src/cat/s21_cat
+    - src/grep/s21_grep
+    expire_in: 30 day
+  after_script:
+    - chmod +x telegrambot.sh
+    - bash ./telegrambot.sh
+
+style:
+  stage: style
+  script:
+    - cd src/cat
+    - clang-format --Werror -style=Google -n *.c
+    - cd ../grep
+    - clang-format --Werror -style=Google -n *.c
+  after_script:
+    - chmod +x telegrambot.sh
+    - bash ./telegrambot.sh
+
+
+test:
+  stage: test
+  script:
+    - cd src/cat
+    - make
+    - mv s21_cat test
+    - cd test
+    - ./test_func_cat.sh
+    - cd ../../grep
+    - make
+    - ./test_func_grep.sh
+  after_script:
+    - chmod +x telegrambot.sh
+    - bash ./telegrambot.sh
+
+deploy:
+  stage: deploy
+  when: manual
+  script:
+    - chmod +x run.sh
+    - ./run.sh
+  after_script:
+    - chmod +x telegrambot.sh
+    - bash ./telegrambot.sh
